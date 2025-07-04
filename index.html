@@ -414,18 +414,31 @@ function checkAPICall() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('api') === 'nextword') {
         console.log('API call detected');
-        loadAppState();
-        const nextWord = getNextWord();
         
-        // Clear everything and return just plain text
-        document.head.innerHTML = '';
-        document.body.innerHTML = '';
-        
-        if (nextWord) {
-            markWordShown(nextWord.id);
-            document.body.textContent = '📚 ' + nextWord.display;
-        } else {
-            document.body.textContent = '📚 No words available';
+        // Make sure we load the app state first
+        try {
+            loadAppState();
+            
+            // Wait a moment for data to load
+            setTimeout(function() {
+                const nextWord = getNextWord();
+                
+                // Clear everything and return just plain text
+                document.head.innerHTML = '';
+                document.body.innerHTML = '';
+                
+                if (nextWord && nextWord.display) {
+                    markWordShown(nextWord.id);
+                    document.body.textContent = '📚 ' + nextWord.display;
+                } else {
+                    // Debug: show what we have
+                    const totalWords = appState.words ? appState.words.length : 0;
+                    document.body.textContent = '📚 Debug: ' + totalWords + ' total words in state';
+                }
+            }, 1000); // Wait 1 second for data to load
+            
+        } catch (error) {
+            document.body.textContent = '📚 Error: ' + error.message;
         }
         return true;
     }
