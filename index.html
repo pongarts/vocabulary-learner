@@ -243,6 +243,16 @@
             background: #667eea;
             color: white;
         }
+        
+        .api-response {
+            font-size: 20px;
+            padding: 20px;
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            margin: 20px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -399,9 +409,33 @@
             }
         };
         
+        // Check for API call
+        function checkAPICall() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('api') === 'nextword') {
+                console.log('API call detected');
+                loadAppState();
+                const nextWord = getNextWord();
+                if (nextWord) {
+                    markWordShown(nextWord.id);
+                    document.body.innerHTML = '<div class="api-response">📚 ' + nextWord.display + '</div>';
+                } else {
+                    document.body.innerHTML = '<div class="api-response">📚 No words available</div>';
+                }
+                return true;
+            }
+            return false;
+        }
+        
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Starting app initialization...');
+            
+            // Check if this is an API call first
+            if (checkAPICall()) {
+                return; // Stop normal initialization for API calls
+            }
+            
             try {
                 loadAppState();
                 console.log('App state loaded');
