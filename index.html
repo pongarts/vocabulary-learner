@@ -409,23 +409,28 @@
             }
         };
         
-        // Check for API call
-        function checkAPICall() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('api') === 'nextword') {
-                console.log('API call detected');
-                loadAppState();
-                const nextWord = getNextWord();
-                if (nextWord) {
-                    markWordShown(nextWord.id);
-                    document.body.innerHTML = '<div class="api-response">📚 ' + nextWord.display + '</div>';
-                } else {
-                    document.body.innerHTML = '<div class="api-response">📚 No words available</div>';
-                }
-                return true;
-            }
-            return false;
+// Check for API call
+function checkAPICall() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('api') === 'nextword') {
+        console.log('API call detected');
+        loadAppState();
+        const nextWord = getNextWord();
+        
+        // Clear everything and return just plain text
+        document.head.innerHTML = '';
+        document.body.innerHTML = '';
+        
+        if (nextWord) {
+            markWordShown(nextWord.id);
+            document.body.textContent = '📚 ' + nextWord.display;
+        } else {
+            document.body.textContent = '📚 No words available';
         }
+        return true;
+    }
+    return false;
+}
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
