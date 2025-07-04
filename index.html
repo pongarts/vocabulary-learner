@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Learner</title>
+    <meta name="description" content="Spaced repetition vocabulary learning app">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #5a6fd8;
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .sheet-item {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8f9ff;
+        }
+        
+        .sheet-item.active {
+            border-color: #667eea;
+            background: #e6f0ff;
+        }
+        
+        .sheet-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .sheet-stats {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .next-review {
+            background: #e6f7ff;
+            border: 2px solid #40a9ff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .next-review h3 {
+            color: #1890ff;
+            margin-bottom: 10px;
+        }
+        
+        .word-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .definition-display {
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error {
+            color: #ff4d4f;
+            background: #fff2f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .success {
+            color: #52c41a;
+            background: #f6ffed;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .notification-times {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .time-chip {
+            background: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .time-chip:hover {
+            background: #e0e0e0;
+        }
+        
+        .time-chip.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 VocabLearn</h1>
+            <p>Spaced repetition vocabulary learning</p>
+        </div>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('dashboard')">Dashboard</button>
+            <button class="tab-button" onclick="showTab('sheets')">Sheets</button>
+            <button class="tab-button" onclick="showTab('settings')">Settings</button>
+        </div>
+        
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="card">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalWords">0</div>
+                        <div class="stat-label">Total Words</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="studiedToday">0</div>
+                        <div class="stat-label">Studied Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="streakDays">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="dueWords">0</div>
+                        <div class="stat-label">Due Now</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Next Review</h3>
+                <div class="next-review" id="nextReview">
+                    <p>No words due for review</p>
+                </div>
+                <button class="button" onclick="syncAllSheets()">Sync All Sheets</button>
+            </div>
+        </div>
+        
+        <!-- Sheets Tab -->
+        <div id="sheets" class="tab-content">
+            <div class="card">
+                <h3>Add New Sheet</h3>
+                <div class="input-group">
+                    <label for="sheetName">Sheet Name</label>
+                    <input type="text" id="sheetName" placeholder="My Vocabulary">
+                </div>
+                <div class="input-group">
+                    <label for="sheetUrl">Google Sheets Share URL</label>
+                    <input type="url" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
+                </div>
+                <div class="input-group">
+                    <label for="sheetType">Content Type</label>
+                    <select id="sheetType">
+                        <option value="auto">Auto-detect</option>
+                        <option value="vocabulary">Vocabulary (Word/Definition)</option>
+                        <option value="facts">Facts (Single Column)</option>
+                    </select>
+                </div>
+                <button class="button" onclick="addSheet()">Add Sheet</button>
+            </div>
+            
+            <div class="card">
+                <h3>Your Sheets</h3>
+                <div id="sheetsList">
+                    <p>No sheets added yet. Add your first sheet above!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <h3>Notification Settings</h3>
+                <div class="input-group">
+                    <label>Notification Times</label>
+                    <div class="notification-times" id="notificationTimes">
+                        <div class="time-chip active" data-time="12:00">12:00</div>
+                        <div class="time-chip active" data-time="14:00">14:00</div>
+                        <div class="time-chip active" data-time="16:00">16:00</div>
+                        <div class="time-chip active" data-time="18:00">18:00</div>
+                        <div class="time-chip active" data-time="20:00">20:00</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="notificationsPerDay">Notifications per Day</label>
+                    <select id="notificationsPerDay">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5" selected>5</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="notificationStyle">Notification Style</label>
+                    <select id="notificationStyle">
+                        <option value="basic">Basic - Show content only</option>
+                        <option value="expandable">Expandable - Brief then full</option>
+                    </select>
+                </div>
+                <button class="button" onclick="saveSettings()">Save Settings</button>
+            </div>
+            
+            <div class="card">
+                <h3>Spaced Repetition</h3>
+                <div class="input-group">
+                    <label>Review Intervals</label>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                        Current: 1 day → 2 days → 3 days → 5 days → 1 week → 2 weeks → 1 month → 3 months
+                    </p>
+                </div>
+                <div class="input-group">
+                    <label for="newWordFrequency">New Word Frequency</label>
+                    <select id="newWordFrequency">
+                        <option value="high">High - New words appear often</option>
+                        <option value="medium" selected>Medium - Balanced approach</option>
+                        <option value="low">Low - Focus on review</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        console.log('PWA loaded successfully');
+        
+        // App State
+        var appState = {
+            sheets: [],
+            words: [],
+            settings: {
+                notificationTimes: ['12:00', '14:00', '16:00', '18:00', '20:00'],
+                notificationsPerDay: 5,
+                notificationStyle: 'basic',
+                newWordFrequency: 'medium'
+            },
+            stats: {
+                totalWords: 0,
+                studiedToday: 0,
+                streakDays: 0,
+                dueWords: 0
+            }
+        };
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Starting app initialization...');
+            try {
+                loadAppState();
+                console.log('App state loaded');
+                updateDashboard();
+                console.log('Dashboard updated');
+                updateSheetsList();
+                console.log('Sheets list updated');
+                updateSettings();
+                console.log('Settings updated');
+                console.log('App initialization complete');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        });
+        
+        // Tab Management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            
+            var selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            var buttons = document.querySelectorAll('.tab-button');
+            var tabNames = ['dashboard', 'sheets', 'settings'];
+            for (var i = 0; i < buttons.length; i++) {
+                if (tabNames[i] === tabName) {
+                    buttons[i].classList.add('active');
+                }
+            }
+        }
+        
+        // Google Sheets Integration
+        function addSheet() {
+            var name = document.getElementById('sheetName').value.trim();
+            var url = document.getElementById('sheetUrl').value.trim();
+            var type = document.getElementById('sheetType').value;
+            
+            if (!name || !url) {
+                showError('Please provide both sheet name and URL');
+                return;
+            }
+            
+            if (url.indexOf('docs.google.com/spreadsheets') === -1) {
+                showError('Please provide a valid Google Sheets URL');
+                return;
+            }
+            
+            var csvUrl = convertToCSVUrl(url);
+            var sheet = {
+                id: Date.now(),
+                name: name,
+                url: url,
+                csvUrl: csvUrl,
+                type: type,
+                active: true,
+                lastSync: null,
+                wordCount: 0,
+                errorCount: 0
+            };
+            
+            appState.sheets.push(sheet);
+            saveAppState();
+            updateSheetsList();
+            syncSheet(sheet);
+            
+            document.getElementById('sheetName').value = '';
+            document.getElementById('sheetUrl').value = '';
+            document.getElementById('sheetType').value = 'auto';
+            
+            showSuccess('Sheet added successfully!');
+        }
+        
+        function convertToCSVUrl(sheetUrl) {
+            var match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (match) {
+                return 'https://docs.google.com/spreadsheets/d/' + match[1] + '/export?format=csv';
+            }
+            return null;
+        }
+        
+        function syncSheet(sheet) {
+            fetch(sheet.csvUrl)
+                .then(function(response) {
+                    return response.text();
+                })
+                .then(function(csvText) {
+                    var words = parseCSV(csvText, sheet);
+                    
+                    appState.words = appState.words.filter(function(w) {
+                        return w.sheetId !== sheet.id;
+                    });
+                    
+                    words.forEach(function(word) {
+                        word.sheetId = sheet.id;
+                        word.id = sheet.id + '_' + Date.now() + '_' + Math.random();
+                        word.nextReview = new Date();
+                        word.interval = 1;
+                        word.reviewCount = 0;
+                        appState.words.push(word);
+                    });
+                    
+                    sheet.lastSync = new Date();
+                    sheet.wordCount = words.length;
+                    sheet.errorCount = 0;
+                    
+                    saveAppState();
+                    updateDashboard();
+                    updateSheetsList();
+                    
+                    showSuccess('Synced ' + words.length + ' items from ' + sheet.name);
+                })
+                .catch(function(error) {
+                    console.error('Sync error:', error);
+                    sheet.errorCount++;
+                    showError('Failed to sync ' + sheet.name + ': ' + error.message);
+                });
+        }
+        
+        function parseCSV(csvText, sheet) {
+            var lines = csvText.split('\n').filter(function(line) {
+                return line.trim();
+            });
+            var words = [];
+            var validCount = 0;
+            var errorCount = 0;
+            
+            for (var i = 1; i < lines.length; i++) {
+                var columns = parseCSVLine(lines[i]);
+                if (columns.length === 0) continue;
+                
+                try {
+                    var word = null;
+                    
+                    if (sheet.type === 'auto') {
+                        if (columns.length === 1) {
+                            word = {
+                                type: 'fact',
+                                content: columns[0].trim(),
+                                display: columns[0].trim()
+                            };
+                        } else if (columns.length >= 2) {
+                            word = {
+                                type: 'vocabulary',
+                                word: columns[0].trim(),
+                                definition: columns[1].trim(),
+                                example: columns[2] ? columns[2].trim() : '',
+                                display: columns[0].trim() + ': ' + columns[1].trim()
+                            };
+                        }
+                    } else if (sheet.type === 'facts') {
+                        word = {
+                            type: 'fact',
+                            content: columns[0].trim(),
+                            display: columns[0].trim()
+                        };
+                    } else if (sheet.type === 'vocabulary') {
+                        word = {
+                            type: 'vocabulary',
+                            word: columns[0].trim(),
+                            definition: columns[1] ? columns[1].trim() : '',
+                            example: columns[2] ? columns[2].trim() : '',
+                            display: columns[0].trim() + ': ' + (columns[1] ? columns[1].trim() : '')
+                        };
+                    }
+                    
+                    if (word && word.display) {
+                        words.push(word);
+                        validCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (error) {
+                    errorCount++;
+                }
+            }
+            
+            if (errorCount > 0) {
+                console.log('Found ' + validCount + ' valid entries, skipped ' + errorCount + ' malformed rows');
+            }
+            
+            return words;
+        }
+        
+        function parseCSVLine(line) {
+            var result = [];
+            var current = '';
+            var inQuotes = false;
+            
+            for (var i = 0; i < line.length; i++) {
+                var char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result.filter(function(item) {
+                return item.length > 0;
+            });
+        }
+        
+        function syncAllSheets() {
+            var activeSheets = appState.sheets.filter(function(sheet) {
+                return sheet.active;
+            });
+            
+            if (activeSheets.length === 0) {
+                showError('No active sheets to sync');
+                return;
+            }
+            
+            showSuccess('Syncing all sheets...');
+            
+            activeSheets.forEach(function(sheet) {
+                syncSheet(sheet);
+            });
+        }
+        
+        // Spaced Repetition Logic
+        function getNextWord() {
+            var now = new Date();
+            var dueWords = appState.words.filter(function(word) {
+                var sheet = appState.sheets.find(function(s) {
+                    return s.id === word.sheetId;
+                });
+                return sheet && sheet.active && new Date(word.nextReview) <= now;
+            });
+            
+            if (dueWords.length > 0) {
+                dueWords.sort(function(a, b) {
+                    return new Date(a.nextReview) - new Date(b.nextReview);
+                });
+                return dueWords[0];
+            }
+            
+            var activeWords = appState.words.filter(function(word) {
+                var sheet = appState.sheets.find(function(s) {
+                    return s.id === word.sheetId;
+                });
+                return sheet && sheet.active;
+            });
+            
+            if (activeWords.length > 0) {
+                return activeWords[Math.floor(Math.random() * activeWords.length)];
+            }
+            
+            return null;
+        }
+        
+        function markWordShown(wordId) {
+            var word = appState.words.find(function(w) {
+                return w.id === wordId;
+            });
+            if (!word) return;
+            
+            word.reviewCount++;
+            word.lastShown = new Date();
+            
+            var intervals = [1, 2, 3, 5, 7, 14, 30, 90];
+            var intervalIndex = Math.min(word.reviewCount - 1, intervals.length - 1);
+            var intervalDays = intervals[intervalIndex];
+            
+            var nextReview = new Date();
+            nextReview.setDate(nextReview.getDate() + intervalDays);
+            word.nextReview = nextReview;
+            
+            appState.stats.studiedToday++;
+            
+            saveAppState();
+            updateDashboard();
+        }
+        
+        // UI Updates
+        function updateDashboard() {
+            try {
+                var now = new Date();
+                var dueWords = appState.words.filter(function(word) {
+                    var sheet = appState.sheets.find(function(s) {
+                        return s.id === word.sheetId;
+                    });
+                    return sheet && sheet.active && new Date(word.nextReview) <= now;
+                });
+                
+                appState.stats.totalWords = appState.words.length;
+                appState.stats.dueWords = dueWords.length;
+                
+                var totalWordsEl = document.getElementById('totalWords');
+                var studiedTodayEl = document.getElementById('studiedToday');
+                var streakDaysEl = document.getElementById('streakDays');
+                var dueWordsEl = document.getElementById('dueWords');
+                var nextReviewEl = document.getElementById('nextReview');
+                
+                if (totalWordsEl) totalWordsEl.textContent = appState.stats.totalWords;
+                if (studiedTodayEl) studiedTodayEl.textContent = appState.stats.studiedToday;
+                if (streakDaysEl) streakDaysEl.textContent = appState.stats.streakDays;
+                if (dueWordsEl) dueWordsEl.textContent = appState.stats.dueWords;
+                
+                if (nextReviewEl) {
+                    var nextWord = getNextWord();
+                    
+                    if (nextWord) {
+                        nextReviewEl.innerHTML = 
+                            '<h3>Next Word</h3>' +
+                            '<div class="word-display">' + escapeHtml(nextWord.display) + '</div>' +
+                            '<button class="button" onclick="markWordShown(\'' + nextWord.id + '\')">Mark as Shown</button>';
+                    } else {
+                        nextReviewEl.innerHTML = '<p>No words available. Add some sheets first!</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            }
+        }
+        
+        function updateSheetsList() {
+            var container = document.getElementById('sheetsList');
+            if (!container) {
+                console.error('sheetsList container not found');
+                return;
+            }
+            
+            if (!appState.sheets || appState.sheets.length === 0) {
+                container.innerHTML = '<p>No sheets added yet. Add your first sheet above!</p>';
+                return;
+            }
+            
+            try {
+                var sheetsHTML = '';
+                for (var i = 0; i < appState.sheets.length; i++) {
+                    var sheet = appState.sheets[i];
+                    var lastSyncText = sheet.lastSync ? new Date(sheet.lastSync).toLocaleString() : 'Never';
+                    var errorText = sheet.errorCount > 0 ? ' • ' + sheet.errorCount + ' errors' : '';
+                    var buttonBg = sheet.active ? '#ff4d4f' : '#52c41a';
+                    var buttonText = sheet.active ? 'Disable' : 'Enable';
+                    
+                    sheetsHTML += '<div class="sheet-item ' + (sheet.active ? 'active' : '') + '">' +
+                        '<div class="sheet-name">' + escapeHtml(sheet.name) + '</div>' +
+                        '<div class="sheet-stats">' +
+                            (sheet.wordCount || 0) + ' words • ' +
+                            'Last sync: ' + lastSyncText +
+                            errorText +
+                        '</div>' +
+                        '<div style="margin-top: 10px;">' +
+                            '<button class="button" onclick="syncSingleSheet(' + sheet.id + ')" ' +
+                                    'style="margin-right: 10px; width: auto; padding: 8px 16px;">' +
+                                'Sync' +
+                            '</button>' +
+                            '<button class="button" onclick="toggleSheet(' + sheet.id + ')" ' +
+                                    'style="width: auto; padding: 8px 16px; background: ' + buttonBg + '">' +
+                                buttonText +
+                            '</button>' +
+                            '<button class="button" onclick="removeSheet(' + sheet.id + ')" ' +
+                                    'style="width: auto; padding: 8px 16px; background: #ff4d4f; margin-left: 10px;">' +
+                                'Remove' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+                }
+                
+                container.innerHTML = sheetsHTML;
+            } catch (error) {
+                console.error('Error updating sheets list:', error);
+                container.innerHTML = '<p>Error loading sheets list</p>';
+            }
+        }
+        
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function syncSingleSheet(sheetId) {
+            var sheet = appState.sheets.find(function(s) {
+                return s.id === sheetId;
+            });
+            if (sheet) {
+                syncSheet(sheet);
+            }
+        }
+        
+        function updateSettings() {
+            var timesContainer = document.getElementById('notificationTimes');
+            if (timesContainer) {
+                var chips = timesContainer.querySelectorAll('.time-chip');
+                chips.forEach(function(chip) {
+                    var time = chip.getAttribute('data-time');
+                    if (appState.settings.notificationTimes.indexOf(time) !== -1) {
+                        chip.classList.add('active');
+                    } else {
+                        chip.classList.remove('active');
+                    }
+                });
+            }
+            
+            var notificationsPerDayEl = document.getElementById('notificationsPerDay');
+            var notificationStyleEl = document.getElementById('notificationStyle');
+            var newWordFrequencyEl = document.getElementById('newWordFrequency');
+            
+            if (notificationsPerDayEl) notificationsPerDayEl.value = appState.settings.notificationsPerDay;
+            if (notificationStyleEl) notificationStyleEl.value = appState.settings.notificationStyle;
+            if (newWordFrequencyEl) newWordFrequencyEl.value = appState.settings.newWordFrequency;
+        }
+        
+        // Sheet Management
+        function toggleSheet(sheetId) {
+            var sheet = appState.sheets.find(function(s) {
+                return s.id === sheetId;
+            });
+            if (sheet) {
+                sheet.active = !sheet.active;
+                saveAppState();
+                updateSheetsList();
+                updateDashboard();
+            }
+        }
+        
+        function removeSheet(sheetId) {
+            if (confirm('Are you sure you want to remove this sheet? All associated words will be deleted.')) {
+                appState.sheets = appState.sheets.filter(function(s) {
+                    return s.id !== sheetId;
+                });
+                appState.words = appState.words.filter(function(w) {
+                    return w.sheetId !== sheetId;
+                });
+                saveAppState();
+                updateSheetsList();
+                updateDashboard();
+                showSuccess('Sheet removed successfully');
+            }
+        }
+        
+        // Settings Management
+        function saveSettings() {
+            var selectedTimes = [];
+            var activeChips = document.querySelectorAll('.time-chip.active');
+            activeChips.forEach(function(chip) {
+                selectedTimes.push(chip.getAttribute('data-time'));
+            });
+            
+            var notificationsPerDayEl = document.getElementById('notificationsPerDay');
+            var notificationStyleEl = document.getElementById('notificationStyle');
+            var newWordFrequencyEl = document.getElementById('newWordFrequency');
+            
+            appState.settings = {
+                notificationTimes: selectedTimes,
+                notificationsPerDay: parseInt(notificationsPerDayEl.value),
+                notificationStyle: notificationStyleEl.value,
+                newWordFrequency: newWordFrequencyEl.value
+            };
+            
+            saveAppState();
+            showSuccess('Settings saved successfully!');
+        }
+        
+        // Notification time selection
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('time-chip')) {
+                e.target.classList.toggle('active');
+            }
+        });
+        
+        // Local Storage Management
+        function saveAppState() {
+            try {
+                localStorage.setItem('vocabLearnerState', JSON.stringify(appState));
+            } catch (error) {
+                console.error('Error saving state:', error);
+            }
+        }
+        
+        function loadAppState() {
+            try {
+                var saved = localStorage.getItem('vocabLearnerState');
+                if (saved) {
+                    var loadedState = JSON.parse(saved);
+                    appState.sheets = loadedState.sheets || [];
+                    appState.words = loadedState.words || [];
+                    appState.settings = Object.assign({}, appState.settings, loadedState.settings || {});
+                    appState.stats = Object.assign({}, appState.stats, loadedState.stats || {});
+                    
+                    var today = new Date().toDateString();
+                    var lastStudyDate = localStorage.getItem('lastStudyDate');
+                    
+                    if (lastStudyDate !== today) {
+                        appState.stats.studiedToday = 0;
+                        localStorage.setItem('lastStudyDate', today);
+                    } else {
+                        var yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        
+                        if (lastStudyDate === yesterday.toDateString()) {
+                            appState.stats.streakDays++;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading state:', error);
+                appState = {
+                    sheets: [],
+                    words: [],
+                    settings: {
+                        notificationTimes: ['12:00', '14:00', '16:00', '18:00', '20:00'],
+                        notificationsPerDay: 5,
+                        notificationStyle: 'basic',
+                        newWordFrequency: 'medium'
+                    },
+                    stats: {
+                        totalWords: 0,
+                        studiedToday: 0,
+                        streakDays: 0,
+                        dueWords: 0
+                    }
+                };
+            }
+        }
+        
+        // Utility Functions
+        function showError(message) {
+            var existing = document.querySelector('.error');
+            if (existing) existing.remove();
+            
+            var errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            var container = document.querySelector('.container');
+            var tabButtons = document.querySelector('.tab-buttons');
+            container.insertBefore(errorDiv, tabButtons);
+            
+            setTimeout(function() {
+                errorDiv.remove();
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            var existing = document.querySelector('.success');
+            if (existing) existing.remove();
+            
+            var successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            
+            var container = document.querySelector('.container');
+            var tabButtons = document.querySelector('.tab-buttons');
+            container.insertBefore(successDiv, tabButtons);
+            
+            setTimeout(function() {
+                successDiv.remove();
+            }, 3000);
+        }
+        
+        // API for iOS Shortcuts
+        window.VocabApp = {
+            getNextWord: getNextWord,
+            markWordShown: markWordShown,
+            syncAllSheets: syncAllSheets,
+            getStats: function() {
+                return appState.stats;
+            },
+            getSettings: function() {
+                return appState.settings;
+            }
+        };
+        
+        // Message handler for shortcuts
+        window.addEventListener('message', function(event) {
+            if (event.data.action === 'getNextWord') {
+                var word = getNextWord();
+                event.source.postMessage({
+                    id: event.data.id,
+                    result: word
+                }, '*');
+            } else if (event.data.action === 'markWordShown') {
+                markWordShown(event.data.wordId);
+                event.source.postMessage({
+                    id: event.data.id,
+                    result: 'success'
+                }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
